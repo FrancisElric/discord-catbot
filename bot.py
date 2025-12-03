@@ -1,14 +1,21 @@
+# Python build-ins imports
 import csv
 import datetime
 import logging
 import random
 
+# Discord.py imports
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
-import credentials
+# My own imports
+import credentials_staging as credentials
+from statuses import *
 
-bot = commands.Bot(command_prefix="!wirus ", intents=discord.Intents.all())
+# TODO import it ^ with namespace statutes but change variable names in statuses.py to something better
+
+bot = commands.Bot(command_prefix="!wirus-staging ", intents=discord.Intents.all())
+
 logging.basicConfig(
     filename="logs",
     filemode="a",
@@ -24,6 +31,9 @@ with open("bites.csv", newline="") as csvfile:
     for row in reader:
         bites.update({row["user"]: int(row["count_of_bites"])})
     print(bites)
+
+# Set current status
+current_status = STATUS[STATUS_BREAD]
 
 
 def update_bites_csv():
@@ -41,13 +51,21 @@ async def on_ready():
     channel = bot.get_channel(credentials.TEST_CHANNEL)
     await channel.send(f"Wirus.exe just started at {datetime.datetime.now()}")
 
+    change_status.start()
+    random_bite.start()
+
 
 @bot.command()
 async def ugryź(ctx, user_id: discord.Member = None):
+    global current_status
+    print(current_status)
     # Set variables
     flavour_text = ""
     emoji = "😼"
-    print(user_id)
+    print(f"{ctx.author} tried biting {user_id}")
+    if current_status == STATUS[STATUS_BREAD]:
+        await ctx.send(f"Wirus jest teraz chlebkiem, i nie chce mu się gryźć 🍞")
+        return
 
     # Choose user to bite
     if random.randint(1, 10) < 3:
@@ -55,6 +73,12 @@ async def ugryź(ctx, user_id: discord.Member = None):
         user_id = ctx.author
     elif user_id is None:
         user_id = random.choice(ctx.guild.members)
+
+    if current_status == STATUS[STATUS_SLEEP]:
+        await ctx.send(f"Obudził_ś Wirusa 😿")
+        current_status = random.choice(STATUS)
+        await update_status(current_status)
+        user_id = ctx.author
 
     # Change flavour_text and/or emoji based on scenarios
     if user_id == bot.user:
@@ -108,6 +132,50 @@ async def ugryź_scoreboard(ctx):
         if place > 15:
             break
     await ctx.send(embed=embed)
+
+
+# DEBUG COMMAND
+# @bot.command()
+# async def set_status(ctx, status):
+#     global current_status
+#     current_status = STATUS[int(status)]
+#     await bot.change_presence(activity=discord.CustomActivity(name=current_status))
+
+
+async def update_status(status):
+    await bot.change_presence(activity=discord.CustomActivity(name=status))
+
+
+@tasks.loop(minutes=15)
+async def change_status():
+    global current_status
+    current_status = random.choice(STATUS)
+    await update_status(current_status)
+
+
+@tasks.loop(minutes=120)
+async def random_bite():
+    if current_status == STATUS[STATUS_ZOOM]:
+        channel = bot.get_channel(credentials.MAIN_SERVER_ID_BOT_CHANNEL)
+        server = bot.get_guild(credentials.MAIN_SERVER_ID)
+        while True:
+            user_id = random.choice(server.members)
+            if user_id != bot.user:
+                break
+
+        if user_id.name in bites.keys():
+            bites[user_id.name] += 1
+        else:
+            bites.update({user_id.name: 1})
+
+        # Save bites to file
+        update_bites_csv()
+
+        # Send messages
+        await channel.send(f"wirus miał zoomies i ugryzł {user_id.mention} 😼")
+        await channel.send(
+            f"w sumie ugryzłem tego użytkownika już: {bites[user_id.name]}"
+        )
 
 
 @bot.event

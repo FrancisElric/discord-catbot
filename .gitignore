@@ -1,3 +1,4 @@
 /logs
 /credentials.py
+/credentials_staging.py
 /bites.csv
