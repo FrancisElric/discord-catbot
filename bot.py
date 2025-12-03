@@ -9,12 +9,13 @@ import discord
 from discord.ext import commands, tasks
 
 # My own imports
-import credentials
+import credentials_staging as credentials
+import statuses
 from statuses import *
 
 # TODO import it ^ with namespace statutes but change variable names in statuses.py to something better
 
-bot = commands.Bot(command_prefix="!wirus ", intents=discord.Intents.all())
+bot = commands.Bot(command_prefix="!wirus-1 ", intents=discord.Intents.all())
 
 logging.basicConfig(
     filename="logs",
@@ -33,7 +34,7 @@ with open("bites.csv", newline="") as csvfile:
     print(bites)
 
 # Set current status
-current_status = STATUS[STATUS_BREAD]
+current_status = None
 
 
 def update_bites_csv():
@@ -51,7 +52,7 @@ async def on_ready():
     channel = bot.get_channel(credentials.TEST_CHANNEL)
     await channel.send(f"Wirus.exe just started at {datetime.datetime.now()}")
 
-    change_status.start()
+    loop_status.start()
     random_bite.start()
 
 
@@ -76,8 +77,7 @@ async def ugryź(ctx, user_id: discord.Member = None):
 
     if current_status == STATUS[STATUS_SLEEP]:
         await ctx.send(f"Obudził_ś Wirusa 😿")
-        current_status = random.choice(STATUS)
-        await update_status(current_status)
+        await update_status(random.choice(STATUS))
         user_id = ctx.author
 
     # Change flavour_text and/or emoji based on scenarios
@@ -143,14 +143,14 @@ async def ugryź_scoreboard(ctx):
 
 
 async def update_status(status):
+    global current_status
+    current_status = status
     await bot.change_presence(activity=discord.CustomActivity(name=status))
 
 
 @tasks.loop(minutes=15)
-async def change_status():
-    global current_status
-    current_status = random.choice(STATUS)
-    await update_status(current_status)
+async def loop_status():
+    await update_status(random.choice(STATUS))
 
 
 @tasks.loop(minutes=120)
@@ -176,6 +176,23 @@ async def random_bite():
         await channel.send(
             f"w sumie ugryzłem tego użytkownika już: {bites[user_id.name]}"
         )
+
+
+@bot.command()
+async def kocyk(ctx):
+    # TODO this should somehow interact with loop_status
+    text = ""
+
+    if ctx.author.name == credentials.FAV_USER:
+        text = (
+            "omg Agusia! wirus zawsze wejdzie na kocyk z Agusią 😻 pora na biszkopty!"
+        )
+    elif random.randint(1, 10) < 2:
+        await update_status(STATUS[STATUS_BAKING])
+        text = "wirus wszedł na kocyk i teraz będzie ugniatał biszkopty 😻👩‍🍳"
+    else:
+        text = "wirus nie chce wejść na kocyk 😾"
+    await ctx.send(text)
 
 
 @bot.event
