@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands, tasks
 
 # My own imports
-import credentials_staging as credentials
+import credentials
 from statuses import *
 
 # TODO import it ^ with namespace statutes but change variable names in statuses.py to something better
