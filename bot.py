@@ -9,8 +9,8 @@ import discord
 from discord.ext import commands, tasks
 
 # My own imports
-import credentials_staging as credentials
-import statuses
+import credentials
+
 from statuses import *
 
 # TODO import it ^ with namespace statutes but change variable names in statuses.py to something better
@@ -187,6 +187,7 @@ async def kocyk(ctx):
         text = (
             "omg Agusia! wirus zawsze wejdzie na kocyk z Agusią 😻 pora na biszkopty!"
         )
+        await update_status(STATUS[STATUS_BAKING])
     elif random.randint(1, 10) < 2:
         await update_status(STATUS[STATUS_BAKING])
         text = "wirus wszedł na kocyk i teraz będzie ugniatał biszkopty 😻👩‍🍳"
