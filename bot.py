@@ -14,7 +14,7 @@ from statuses import *
 
 # TODO import it ^ with namespace statutes but change variable names in statuses.py to something better
 
-bot = commands.Bot(command_prefix="!wirus-staging ", intents=discord.Intents.all())
+bot = commands.Bot(command_prefix="!wirus ", intents=discord.Intents.all())
 
 logging.basicConfig(
     filename="logs",
