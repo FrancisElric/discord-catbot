@@ -68,6 +68,13 @@ async def ugryź(ctx, user_id: discord.Member = None):
         await ctx.send(f"Wirus jest teraz chlebkiem, i nie chce mu się gryźć 🍞")
         return
 
+    if user_id == ctx.author:
+        await ctx.send(f"Nie możesz kazać ugryź samego sb gamoniu....")
+        return
+
+    if user_id == bot.user:
+        user_id = ctx.author
+
     # Choose user to bite
     if random.randint(1, 10) < 3:
         # 1 in 5 chance that bot will bite the sender instead of target
